@@ -4,14 +4,13 @@
 
 | Task | Plan | Priority | Effort | Status |
 |------|------|----------|--------|--------|
-| [TASK-001](TASKS-001-publish-npm.md) | - | HIGH | 30m | TODO |
 
-**Progress**: 0 hours completed out of 0.5 hours total
+**Active Tasks**: 0 tasks, 0 hours total
+**Completed**: See [history/](history/) for completed tasks
 
 ## Active Tasks
 
-### TODO
-- **TASK-001**: Publish package to npm
+No active tasks.
 
 ## Task Status Legend
 

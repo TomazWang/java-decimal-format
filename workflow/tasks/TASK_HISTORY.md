@@ -4,6 +4,42 @@ This file tracks completed tasks with implementation details, lessons learned, a
 
 ## Completed Tasks
 
+### 2026-02-04: Prepare Package for npm Publishing (TASK-001)
+
+**Summary**: Set up automated npm publishing via GitHub Actions and fixed all test failures.
+
+**Implementation**:
+- Created `.github/workflows/npm-publish.yml` for automated publishing on tag push
+- Moved test files from `test-case/` to `test/` directory (192 tests total)
+- Fixed 4 critical implementation bugs for Java compliance:
+  - HALF_DOWN rounding with floating-point precision handling
+  - Pattern `#` (optional digit) zero handling per Java spec
+  - Large integer precision loss in fractional calculations
+  - Floating-point epsilon tolerance for CEILING/FLOOR modes
+- Updated test imports and RoundingMode usage to match Java API
+
+**Test Results**:
+- ✅ All 192 tests passing (52 core + 140 scenario tests)
+- ✅ Build successful
+- ✅ Package contents verified
+
+**Files Created/Modified**:
+- `.github/workflows/npm-publish.yml` (created)
+- `vitest.config.ts` (created)
+- `src/DecimalFormat.ts` (bug fixes)
+- `test/*.test.ts` (moved and updated)
+
+**Challenges Solved**:
+1. JavaScript floating-point precision in rounding calculations
+2. Test migration with import and API signature fixes
+3. Subtle differences in pattern `#` behavior between integer-only and fraction patterns
+
+**Next Steps**:
+- User needs to set NPM_TOKEN secret in GitHub settings
+- Push git tag `v1.0.0` to trigger automated npm publish
+
+---
+
 ### 2026-02-04: Project Initialization
 
 **Summary**: Created java-decimal-format package from scratch with complete implementation.

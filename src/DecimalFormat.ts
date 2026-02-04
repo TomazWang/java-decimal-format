@@ -79,19 +79,32 @@ export class DecimalFormat {
 
     // Work with absolute value for formatting (sign is handled by prefix)
     const absRounded = Math.abs(rounded);
-    const factor = Math.pow(10, this.parsedPattern.maxFractionDigits);
 
-    // Scale up, round to integer to eliminate floating point errors, then scale down
-    const scaled = Math.round(absRounded * factor);
-    let integerPart = Math.floor(scaled / factor).toString();
-    let fractionPart = (scaled % factor).toString().padStart(this.parsedPattern.maxFractionDigits, '0');
+    let integerPart: string;
+    let fractionPart: string;
+
+    // For integer values, avoid precision loss from scaling arithmetic on large numbers
+    if (Number.isInteger(absRounded)) {
+      integerPart = Math.floor(absRounded).toString();
+      fractionPart = '0'.repeat(this.parsedPattern.maxFractionDigits);
+    } else {
+      const factor = Math.pow(10, this.parsedPattern.maxFractionDigits);
+      // Scale up, round to integer to eliminate floating point errors, then scale down
+      const scaled = Math.round(absRounded * factor);
+      integerPart = Math.floor(scaled / factor).toString();
+      fractionPart = (scaled % factor).toString().padStart(this.parsedPattern.maxFractionDigits, '0');
+    }
 
     // Apply minimum integer digits (zero padding)
-    // If minIntegerDigits is 0 and integerPart is "0", make it empty
+    if (integerPart.length < this.parsedPattern.minIntegerDigits) {
+      integerPart = '0'.repeat(this.parsedPattern.minIntegerDigits - integerPart.length) + integerPart;
+    }
+
+    // Handle optional integer digits (all # symbols, no 0)
+    // If minIntegerDigits is 0 and the integer part is "0", make it empty
+    // Per Java spec: "#" means "Digit, zero shows as absent"
     if (this.parsedPattern.minIntegerDigits === 0 && integerPart === '0') {
       integerPart = '';
-    } else if (integerPart.length < this.parsedPattern.minIntegerDigits) {
-      integerPart = '0'.repeat(this.parsedPattern.minIntegerDigits - integerPart.length) + integerPart;
     }
 
     // Apply grouping
@@ -107,9 +120,13 @@ export class DecimalFormat {
 
     // Build result
     if (fractionPart.length > 0 || this.parsedPattern.decimalSeparatorAlwaysShown) {
-      return integerPart + '.' + fractionPart;
+      // If integerPart is empty but we have a fraction, that's OK (e.g., ".5")
+      // However, if integerPart is empty, return ".fraction" not "fraction"
+      return (integerPart || '') + '.' + fractionPart;
     } else {
-      return integerPart;
+      // No fraction part will be shown
+      // Java always shows at least one digit, even with pattern "###" formatting 0
+      return integerPart || '0';
     }
   }
 
@@ -173,7 +190,13 @@ export class DecimalFormat {
     const factor = Math.pow(10, scale);
     const sign = value >= 0 ? 1 : -1;
     const absValue = Math.abs(value);
-    const scaled = absValue * factor;
+    let scaled = absValue * factor;
+
+    // Handle floating-point precision: if scaled is very close to an integer, round it
+    const rounded = Math.round(scaled);
+    if (Math.abs(scaled - rounded) < 0.0000000001) {
+      scaled = rounded;
+    }
 
     let roundedScaled: number;
 
@@ -213,11 +236,14 @@ export class DecimalFormat {
       }
 
       case RoundingMode.HALF_DOWN: {
+        // Round towards nearest neighbor, unless equidistant (tie at .5), then round down
         const floored = Math.floor(scaled);
         const fraction = scaled - floored;
-        if (fraction > 0.5) {
+        // Use epsilon to handle floating-point precision errors
+        if (fraction > 0.5 + 0.0000000001) {
           roundedScaled = floored + 1;
         } else {
+          // fraction <= 0.5 (including ties), round down
           roundedScaled = floored;
         }
         break;
@@ -278,8 +304,17 @@ export class DecimalFormat {
       case RoundingMode.HALF_UP:
         return sign * Math.round(absValue);
 
-      case RoundingMode.HALF_DOWN:
-        return sign * (Math.floor(absValue + 0.5) === Math.ceil(absValue - 0.5) ? Math.floor(absValue) : Math.round(absValue));
+      case RoundingMode.HALF_DOWN: {
+        // Round towards nearest neighbor, unless both neighbors are equidistant (tie at .5), then round down
+        const floored = Math.floor(absValue);
+        const fraction = absValue - floored;
+        if (fraction > 0.5) {
+          return sign * (floored + 1);
+        } else {
+          // fraction <= 0.5, round down (towards zero)
+          return sign * floored;
+        }
+      }
 
       case RoundingMode.HALF_EVEN: {
         const floored = Math.floor(absValue);

@@ -1,0 +1,40 @@
+{
+  "name": "java-decimal-format",
+  "version": "1.0.0",
+  "description": "A faithful JavaScript/TypeScript mirror of Java's DecimalFormat class with exact behavior matching",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "decimal",
+    "format",
+    "number",
+    "formatting",
+    "java",
+    "DecimalFormat",
+    "currency",
+    "percentage",
+    "rounding"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TomazWang/java-decimal-format.git"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
